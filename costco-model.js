@@ -1,6 +1,8 @@
 // Costco DCF model, ported from valuation_engine.py so it can run in the browser.
-// Same math as the Python version: 5-year FCFF, Gordon-growth terminal value,
-// reverse DCF four ways, and a Monte Carlo over the same bear/base/bull ranges.
+// Same math as the Python version: three-stage FCFF (fast-growth years, a glide
+// down to long-term growth, then a Gordon-growth terminal value), reverse DCF
+// five ways including the implied return, and a Monte Carlo over the same
+// bear/base/bull ranges. The growth list passed in sets the forecast length.
 
 (function (root) {
   "use strict";
