@@ -46,6 +46,8 @@ th:first-child,td:first-child{text-align:left;white-space:nowrap}
 th{color:var(--muted);font-weight:normal}
 #heat td.c{color:#222;border:2px solid transparent}
 #heat td.mat{border:2px solid #222;font-weight:bold}
+#heat td.near{border:2px dashed #8c959f}
+.rows .sec{color:var(--muted);font-size:13px;border-bottom:0;padding:12px 0 2px}
 #heat tr.dim td{opacity:.35}
 tr.total td{font-weight:bold;border-top:2px solid var(--line)}
 .pos{color:var(--over)} .neg{color:var(--under)}
@@ -118,6 +120,7 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
     <span><i class="sw" style="background:#f4b4b0"></i>Overspend (unfavorable)</span>
     <span><i class="sw" style="background:#b4dfc0"></i>Underspend (favorable)</span>
     <span><i class="sw" style="border:2px solid #222"></i>Material miss under the current rule</span>
+    <span><i class="sw" style="border:2px dashed #8c959f"></i>Near miss: passes the $ test, within 1 point of the % test</span>
   </div>
 </div>
 
@@ -128,7 +131,7 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
     <p class="note" id="ytd-note"></p>
   </div>
   <div class="card">
-    <h2>Flagged department-months</h2>
+    <h2>Flagged and near-miss months</h2>
     <div class="rows" id="matlist"></div>
   </div>
 </div>
@@ -137,6 +140,13 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
   <h2>By department</h2>
   <div class="scroll"><table id="dept"></table></div>
   <p class="note">These are cost centers, so spending under budget counts as favorable. My first version of this project got that backwards and called Marketing the "top performer" for overspending by $88K.</p>
+</div>
+
+<div class="card">
+  <h2>About the data: the budget phasing is the real finding</h2>
+  <p class="note" style="margin:0 0 8px">Real department budgets don't swing 100x from one month to the next. These do. Swing = biggest monthly budget divided by smallest.</p>
+  <div class="scroll"><table id="phase"></table></div>
+  <p class="note">This is a practice dataset, and the monthly phasing is synthetic. The annual and department totals still hold up, but month-level patterns like the R&amp;D Q4 underspend show the method rather than a real finding. In a real company, phasing this lumpy would be the first thing I'd question, because it makes monthly variances almost meaningless.</p>
 </div>
 
 <p class="footer">Student project using a practice dataset, not a real company's books. The numbers here match the Python pipeline and my Excel workbook to the dollar: $28,221,717 budget, $28,171,672 actual, 99.8% net accuracy, 95.7% gross accuracy, 7 of 96 material misses under my rule.</p>
@@ -176,6 +186,9 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
   const k = v => Math.round(Math.abs(v) / 1000) === 0 ? "$0K" : (v < 0 ? "−" : "+") + "$" + Math.round(Math.abs(v) / 1000) + "K";
   const pct1 = v => (v * 100).toFixed(1) + "%";
   const isMat = r => Math.abs(r.v) > state.usd && Math.abs(r.pct) > state.pct;
+  // Near miss: passes the $ test but lands within 1 point under the % test
+  const isNear = r => state.pct > 0.01 && Math.abs(r.v) > state.usd &&
+    Math.abs(r.pct) > state.pct - 0.01 && Math.abs(r.pct) <= state.pct;
 
   // Department picker
   $("in-dept").innerHTML = ["All"].concat(DEPTS).map(d => `<option>${d === "All" ? "All departments" : d}</option>`).join("");
@@ -220,13 +233,14 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
     $("k-miss-sub").textContent = "net variance " + sgn(s.net);
     $("k-mat").textContent = s.mat;
     $("k-mat-sub").textContent = "of " + rows.length + " department-months";
-    $("k-note").textContent = `${state.dept === "All" ? "Across all departments" : state.dept}, overspends and underspends add up to ${usd(Math.abs(s.gross))} of misses, but they net to only ${sgn(s.net)} on ${usd(s.budget)} of budget. That gap is why the headline accuracy number looks so good.`;
+    $("k-note").textContent = `${state.dept === "All" ? "Across all departments" : state.dept}, overspends and underspends add up to ${usd(s.gross)} of total misses, but ${usd(s.gross - Math.abs(s.net))} of that cancelled out, leaving a net of only ${sgn(s.net)} on ${usd(s.budget)} of budget. That's why the headline accuracy number looks so good.`;
 
     drawHeat();
     drawYtd(rows);
     drawMatList();
     drawDept();
   }
+  drawPhase();
 
   function shade(v) {
     const a = Math.min(Math.abs(v) / 70000, 1);
@@ -241,7 +255,7 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
       const yr = rs.reduce((s, r) => s + r.v, 0);
       const dim = state.dept !== "All" && state.dept !== d ? ' class="dim"' : "";
       h += `<tr${dim}><td>${d}</td>` + rs.map(r =>
-        `<td class="c${isMat(r) ? " mat" : ""}" style="background:${shade(r.v)}" title="${d} ${MONTHS[r.m]}: budget ${usd(r.budget)}, actual ${usd(r.actual)}, ${(r.pct * 100).toFixed(1)}%">${k(r.v)}</td>`
+        `<td class="c${isMat(r) ? " mat" : isNear(r) ? " near" : ""}" style="background:${shade(r.v)}" title="${d} ${MONTHS[r.m]}: budget ${usd(r.budget)}, actual ${usd(r.actual)}, ${(r.pct * 100).toFixed(1)}%">${k(r.v)}</td>`
       ).join("") + `<td class="${yr > 0 ? "pos" : "neg"}"><b>${k(yr)}</b></td></tr>`;
     });
     $("heat").innerHTML = h;
@@ -283,12 +297,29 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
   }
 
   function drawMatList() {
+    const byPct = (a, b) => Math.abs(b.pct) - Math.abs(a.pct);
     const list = ROWS.filter(isMat).sort((a, b) => Math.abs(b.v) - Math.abs(a.v));
-    if (!list.length) { $("matlist").innerHTML = `<div><span>Nothing breaks both thresholds.</span><b></b></div>`; return; }
-    const shown = list.slice(0, 12);
-    $("matlist").innerHTML = shown.map(r =>
-      `<div><span>${r.dept} ${MONTHS[r.m]}</span><b class="${r.v > 0 ? "pos" : "neg"}">${sgn(r.v)} (${(r.pct * 100).toFixed(1)}%)</b></div>`
-    ).join("") + (list.length > shown.length ? `<div><span>…and ${list.length - shown.length} more</span><b></b></div>` : "");
+    const near = ROWS.filter(isNear).sort(byPct);
+    const line = r => `<div><span>${r.dept} ${MONTHS[r.m]}</span><b class="${r.v > 0 ? "pos" : r.v < 0 ? "neg" : ""}">${sgn(r.v)} (${(r.pct * 100).toFixed(1)}%)</b></div>`;
+    let html = `<div class="sec"><span>Material misses (${list.length})</span><b></b></div>`;
+    html += list.length ? list.slice(0, 10).map(line).join("") : `<div><span>Nothing breaks both thresholds.</span><b></b></div>`;
+    if (list.length > 10) html += `<div><span>…and ${list.length - 10} more</span><b></b></div>`;
+    if (state.pct > 0.01) {
+      const lo = ((state.pct - 0.01) * 100).toFixed(state.pct * 100 % 1 ? 2 : 0), hi = (state.pct * 100).toFixed(state.pct * 100 % 1 ? 2 : 0);
+      html += `<div class="sec"><span>Near misses: over the $ test, ${lo}% to ${hi}% (${near.length})</span><b></b></div>`;
+      html += near.length ? near.slice(0, 6).map(line).join("") : `<div><span>None.</span><b></b></div>`;
+    }
+    $("matlist").innerHTML = html;
+  }
+
+  function drawPhase() {
+    const data = DEPTS.map(d => {
+      const b = RAW[d].map(x => x[0]);
+      const lo = Math.min(...b), hi = Math.max(...b);
+      return { d, lo, hi, lom: MONTHS[b.indexOf(lo)], him: MONTHS[b.indexOf(hi)], x: hi / lo };
+    }).sort((a, b) => b.x - a.x);
+    $("phase").innerHTML = `<tr><th>Department</th><th>Smallest month</th><th>Biggest month</th><th>Swing</th></tr>` +
+      data.map(r => `<tr><td>${r.d}</td><td>${usd(r.lo)} (${r.lom})</td><td>${usd(r.hi)} (${r.him})</td><td class="pos"><b>${Math.round(r.x)}x</b></td></tr>`).join("");
   }
 
   function drawDept() {
