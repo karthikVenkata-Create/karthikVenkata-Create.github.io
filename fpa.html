@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FP&amp;A Budget Variance | Venkata Karthik</title>
+<meta name="description" content="Interactive budget vs actual variance analysis: change the materiality rule and see which department-months get flagged.">
+<style>
+:root{
+  --bg:#f5f5f5; --card:#fff; --ink:#222; --muted:#5c6670; --line:#e3e6ea;
+  --accent:#0969da; --over:#cf222e; --under:#1a7f37; --gray:#8c959f;
+}
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 16px 48px}
+a{color:var(--accent)}
+h1{margin:0 0 4px;font-size:28px}
+h2{font-size:18px;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);padding:20px;margin-top:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.top-links{font-size:14px;margin-bottom:18px}
+.top-links a{margin-right:14px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.presets button{font:inherit;font-size:14px;padding:7px 12px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.presets button:hover{border-color:var(--accent)}
+.presets button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 28px;margin-top:16px}
+.field label{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.field label b{font-variant-numeric:tabular-nums}
+.field input[type=range]{width:100%;accent-color:var(--accent)}
+.field select{width:100%;font:inherit;font-size:14px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.field small{color:var(--muted);font-size:12px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi .lab{color:var(--muted);font-size:13px}
+.kpi .num{font-size:32px;font-weight:bold;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi .num.red{color:var(--over)}
+.kpi small{color:var(--muted);font-size:12px}
+.rows div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:15px}
+.rows div:last-child{border-bottom:0}
+.rows b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.note{color:var(--muted);font-size:13px;margin:10px 0 0}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 6px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:normal}
+#heat td.c{color:#222;border:2px solid transparent}
+#heat td.mat{border:2px solid #222;font-weight:bold}
+#heat tr.dim td{opacity:.35}
+tr.total td{font-weight:bold;border-top:2px solid var(--line)}
+.pos{color:var(--over)} .neg{color:var(--under)}
+.scroll{overflow-x:auto}
+#ytd{width:100%;height:auto;display:block}
+#ytd text{font-size:11px;fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:14px;height:12px;border-radius:2px;display:inline-block}
+.footer{color:var(--muted);font-size:13px;margin-top:24px}
+@media (max-width:720px){
+  .grid2,.inputs{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi .num{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top-links">
+  <a href="./">← Back to portfolio</a>
+  <a href="https://github.com/karthikVenkata-Create/fpa-budget-variance-pipeline">Full pipeline on GitHub</a>
+</div>
+
+<h1>FP&amp;A Budget Variance Analysis</h1>
+<p class="sub">This is $28.2M of 2024 operating spend across 8 departments and 12 months, budget versus actual. The plan looks 99.8% accurate, but that's only because the misses cancel out. Change the materiality rule below to see which department-months get flagged and why the rule needs both a dollar test and a percent test.</p>
+
+<div class="card">
+  <h2>Materiality rule</h2>
+  <div class="presets" id="presets">
+    <button data-p="mine" class="on">My rule: over $25K and over 5%</button>
+    <button data-p="dollar">Dollar test only ($25K)</button>
+    <button data-p="pct">Percent test only (5%)</button>
+    <button data-p="strict">Stricter: over $10K and over 3%</button>
+  </div>
+  <div class="inputs">
+    <div class="field">
+      <label for="in-usd"><span>Dollar threshold</span><b id="out-usd"></b></label>
+      <input type="range" id="in-usd" min="0" max="100000" step="1000">
+      <small>Filters out noise on small months</small>
+    </div>
+    <div class="field">
+      <label for="in-pct"><span>Percent-of-budget threshold</span><b id="out-pct"></b></label>
+      <input type="range" id="in-pct" min="0" max="0.15" step="0.0025">
+      <small>Filters out big departments where $25K is a rounding error</small>
+    </div>
+    <div class="field">
+      <label for="in-dept"><span>Department</span></label>
+      <select id="in-dept"></select>
+      <small>Changes the numbers and the year-to-date chart</small>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="kpis">
+    <div class="kpi"><div class="lab">Net accuracy</div><div class="num" id="k-net">–</div><small>misses cancel out</small></div>
+    <div class="kpi"><div class="lab">Gross accuracy</div><div class="num" id="k-gross">–</div><small>every miss counted</small></div>
+    <div class="kpi"><div class="lab">Gross misses</div><div class="num red" id="k-miss">–</div><small id="k-miss-sub">–</small></div>
+    <div class="kpi"><div class="lab">Material misses</div><div class="num red" id="k-mat">–</div><small id="k-mat-sub">–</small></div>
+  </div>
+  <p class="note" id="k-note"></p>
+</div>
+
+<div class="card">
+  <h2>Variance heatmap ($, actual minus budget)</h2>
+  <div class="scroll"><table id="heat"></table></div>
+  <div class="legend">
+    <span><i class="sw" style="background:#f4b4b0"></i>Overspend (unfavorable)</span>
+    <span><i class="sw" style="background:#b4dfc0"></i>Underspend (favorable)</span>
+    <span><i class="sw" style="border:2px solid #222"></i>Material miss under the current rule</span>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>Year-to-date variance</h2>
+    <svg id="ytd" viewBox="0 0 460 220" role="img" aria-label="Year-to-date variance by month"></svg>
+    <p class="note" id="ytd-note"></p>
+  </div>
+  <div class="card">
+    <h2>Flagged department-months</h2>
+    <div class="rows" id="matlist"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>By department</h2>
+  <div class="scroll"><table id="dept"></table></div>
+  <p class="note">These are cost centers, so spending under budget counts as favorable. My first version of this project got that backwards and called Marketing the "top performer" for overspending by $88K.</p>
+</div>
+
+<p class="footer">Student project using a practice dataset, not a real company's books. The numbers here match the Python pipeline and my Excel workbook to the dollar: $28,221,717 budget, $28,171,672 actual, 99.8% net accuracy, 95.7% gross accuracy, 7 of 96 material misses under my rule.</p>
+
+</div>
+
+<script>
+(function () {
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  // [budget, actual] for each month, Jan to Dec 2024
+  const RAW = {
+    "Marketing":[[1310207,1353427],[201517,205506],[629971,667753],[365478,343989],[191888,188125],[4280,4035],[913634,955629],[265515,261937],[156015,147813],[5158,5220],[84135,77037],[88385,93830]],
+    "IT":[[107335,116922],[267622,290042],[165729,167467],[195575,209045],[34520,32585],[114751,110183],[175143,181459],[38190,40573],[28305,30120],[592649,582462],[106995,114463],[44481,47290]],
+    "HR":[[176168,180398],[331631,353804],[1111570,1172329],[133849,126297],[246601,264025],[657601,662257],[121277,127988],[37393,40058],[159710,154478],[82067,76306],[1239326,1178634],[770631,760519]],
+    "Finance":[[204546,215530],[160450,150362],[217501,217821],[242694,251248],[22781,24250],[124695,120788],[74922,71149],[439148,455838],[171698,181263],[1107759,1077583],[137497,127502],[458038,494357]],
+    "Operations":[[936211,899294],[751664,757440],[304068,284414],[850883,897167],[30924,28555],[72803,79183],[15447,16203],[131343,124220],[164250,149630],[105653,111652],[588928,610856],[147261,153331]],
+    "Customer Success":[[1363,1476],[139699,133457],[105579,105526],[49083,47323],[24951,23984],[80494,73783],[559505,570539],[76288,76324],[142939,131398],[237254,227800],[88324,94814],[697211,664526]],
+    "Sales":[[284101,267910],[52786,50926],[52777,53012],[18621,18392],[625881,602361],[286012,291770],[383156,358292],[6473,6230],[1090283,1064056],[555924,551528],[74278,78090],[62450,59074]],
+    "R&D":[[32179,32018],[185677,172963],[51513,53490],[831785,870830],[408379,412883],[168077,176274],[27468,27437],[155809,156446],[164520,162374],[547074,500340],[424520,394557],[912818,835828]],
+  };
+  const DEPTS = Object.keys(RAW);
+  const ROWS = [];
+  DEPTS.forEach(d => RAW[d].forEach(([b, a], m) =>
+    ROWS.push({ dept: d, m, budget: b, actual: a, v: a - b, pct: (a - b) / b })));
+
+  const PRESETS = {
+    mine:   { usd: 25000, pct: 0.05 },
+    dollar: { usd: 25000, pct: 0 },
+    pct:    { usd: 0,     pct: 0.05 },
+    strict: { usd: 10000, pct: 0.03 },
+  };
+  let state = { usd: 25000, pct: 0.05, dept: "All" };
+
+  const $ = id => document.getElementById(id);
+  const usd = v => (v < 0 ? "−$" : "$") + Math.abs(Math.round(v)).toLocaleString("en-US");
+  const sgn = v => (v > 0 ? "+" : v < 0 ? "−" : "") + "$" + Math.abs(Math.round(v)).toLocaleString("en-US");
+  const k = v => Math.round(Math.abs(v) / 1000) === 0 ? "$0K" : (v < 0 ? "−" : "+") + "$" + Math.round(Math.abs(v) / 1000) + "K";
+  const pct1 = v => (v * 100).toFixed(1) + "%";
+  const isMat = r => Math.abs(r.v) > state.usd && Math.abs(r.pct) > state.pct;
+
+  // Department picker
+  $("in-dept").innerHTML = ["All"].concat(DEPTS).map(d => `<option>${d === "All" ? "All departments" : d}</option>`).join("");
+  $("in-dept").addEventListener("change", e => {
+    state.dept = e.target.selectedIndex === 0 ? "All" : DEPTS[e.target.selectedIndex - 1];
+    render();
+  });
+  ["usd", "pct"].forEach(key => $("in-" + key).addEventListener("input", e => {
+    state[key] = parseFloat(e.target.value);
+    markPreset(null);
+    render();
+  }));
+  document.querySelectorAll("#presets button").forEach(b => b.addEventListener("click", () => {
+    Object.assign(state, PRESETS[b.dataset.p]);
+    markPreset(b.dataset.p);
+    render();
+  }));
+  function markPreset(key) {
+    document.querySelectorAll("#presets button").forEach(b => b.classList.toggle("on", b.dataset.p === key));
+  }
+
+  function stats(rows) {
+    const budget = rows.reduce((s, r) => s + r.budget, 0);
+    const actual = rows.reduce((s, r) => s + r.actual, 0);
+    const net = actual - budget;
+    const gross = rows.reduce((s, r) => s + Math.abs(r.v), 0);
+    return { budget, actual, net, gross, netAcc: 1 - Math.abs(net) / budget, grossAcc: 1 - gross / budget,
+             mat: rows.filter(isMat).length };
+  }
+
+  function render() {
+    $("in-usd").value = state.usd;
+    $("in-pct").value = state.pct;
+    $("out-usd").textContent = state.usd ? "over $" + (state.usd / 1000) + "K" : "off";
+    $("out-pct").textContent = state.pct ? "over " + (state.pct * 100).toFixed(state.pct * 100 % 1 ? 2 : 0) + "%" : "off";
+
+    const rows = state.dept === "All" ? ROWS : ROWS.filter(r => r.dept === state.dept);
+    const s = stats(rows);
+    $("k-net").textContent = pct1(s.netAcc);
+    $("k-gross").textContent = pct1(s.grossAcc);
+    $("k-miss").textContent = "$" + (s.gross / 1e6 >= 1 ? (s.gross / 1e6).toFixed(2) + "M" : Math.round(s.gross / 1000) + "K");
+    $("k-miss-sub").textContent = "net variance " + sgn(s.net);
+    $("k-mat").textContent = s.mat;
+    $("k-mat-sub").textContent = "of " + rows.length + " department-months";
+    $("k-note").textContent = `${state.dept === "All" ? "Across all departments" : state.dept}, overspends and underspends add up to ${usd(Math.abs(s.gross))} of misses, but they net to only ${sgn(s.net)} on ${usd(s.budget)} of budget. That gap is why the headline accuracy number looks so good.`;
+
+    drawHeat();
+    drawYtd(rows);
+    drawMatList();
+    drawDept();
+  }
+
+  function shade(v) {
+    const a = Math.min(Math.abs(v) / 70000, 1);
+    const [r, g, b] = v > 0 ? [207, 34, 46] : [26, 127, 55];
+    return `rgba(${r},${g},${b},${(0.08 + a * 0.55).toFixed(2)})`;
+  }
+
+  function drawHeat() {
+    let h = `<tr><th>Department</th>${MONTHS.map(m => `<th>${m}</th>`).join("")}<th>Year</th></tr>`;
+    DEPTS.forEach(d => {
+      const rs = ROWS.filter(r => r.dept === d);
+      const yr = rs.reduce((s, r) => s + r.v, 0);
+      const dim = state.dept !== "All" && state.dept !== d ? ' class="dim"' : "";
+      h += `<tr${dim}><td>${d}</td>` + rs.map(r =>
+        `<td class="c${isMat(r) ? " mat" : ""}" style="background:${shade(r.v)}" title="${d} ${MONTHS[r.m]}: budget ${usd(r.budget)}, actual ${usd(r.actual)}, ${(r.pct * 100).toFixed(1)}%">${k(r.v)}</td>`
+      ).join("") + `<td class="${yr > 0 ? "pos" : "neg"}"><b>${k(yr)}</b></td></tr>`;
+    });
+    $("heat").innerHTML = h;
+  }
+
+  function drawYtd(rows) {
+    const monthly = MONTHS.map((_, m) => rows.filter(r => r.m === m).reduce((s, r) => s + r.v, 0));
+    let c = 0; const ytd = monthly.map(v => (c += v));
+    const W = 460, H = 220, L = 46, R = 450, T = 16, B = 190;
+    const lo = Math.min(0, ...ytd), hi = Math.max(0, ...ytd), pad = (hi - lo) * 0.12 || 1000;
+    const y0 = lo - pad, y1 = hi + pad;
+    const X = i => L + (R - L) * i / 11, Y = v => B - (B - T) * (v - y0) / (y1 - y0);
+    let o = "";
+    const step = niceStep((y1 - y0) / 4);
+    for (let t = Math.ceil(y0 / step) * step; t <= y1; t += step) {
+      o += `<line x1="${L}" x2="${R}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? "#8c959f" : "#eaeef2"}"/>` +
+           `<text x="${L - 6}" y="${Y(t) + 4}" text-anchor="end">${k(t)}</text>`;
+    }
+    MONTHS.forEach((m, i) => o += `<text x="${X(i)}" y="${B + 16}" text-anchor="middle">${m}</text>`);
+    // monthly bars
+    monthly.forEach((v, i) => {
+      const yTop = Math.min(Y(v), Y(0)), h = Math.abs(Y(v) - Y(0));
+      o += `<rect x="${X(i) - 7}" y="${yTop}" width="14" height="${h}" fill="${v > 0 ? "#f4b4b0" : "#b4dfc0"}"><title>${MONTHS[i]}: ${sgn(v)} this month</title></rect>`;
+    });
+    o += `<polyline fill="none" stroke="#222" stroke-width="2" points="${ytd.map((v, i) => X(i) + "," + Y(v)).join(" ")}"/>`;
+    ytd.forEach((v, i) => o += `<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="#222"><title>${MONTHS[i]} YTD: ${sgn(v)}</title></circle>`);
+    const peak = ytd.reduce((bi, v, i) => (Math.abs(v) > Math.abs(ytd[bi]) ? i : bi), 0);
+    o += `<text x="${X(peak)}" y="${Y(ytd[peak]) + (ytd[peak] >= 0 ? -9 : 16)}" text-anchor="middle" style="fill:#222;font-weight:bold">${sgn(ytd[peak])}</text>`;
+    $("ytd").innerHTML = o;
+    const h1 = monthly.slice(0, 8).reduce((a, b) => a + b, 0), h2 = monthly.slice(8).reduce((a, b) => a + b, 0);
+    $("ytd-note").textContent = `Line = running total, bars = each month. Jan–Aug ran ${sgn(h1)}, Sep–Dec ran ${sgn(h2)}, so the year ended at ${sgn(ytd[11])}. ` +
+      (Math.sign(h1) !== Math.sign(h2) && Math.abs(ytd[11]) < Math.max(Math.abs(h1), Math.abs(h2)) / 2
+        ? "Two misses in opposite directions made the full year look close to plan." : "");
+  }
+
+  function niceStep(raw) {
+    const p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p;
+    return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * p;
+  }
+
+  function drawMatList() {
+    const list = ROWS.filter(isMat).sort((a, b) => Math.abs(b.v) - Math.abs(a.v));
+    if (!list.length) { $("matlist").innerHTML = `<div><span>Nothing breaks both thresholds.</span><b></b></div>`; return; }
+    const shown = list.slice(0, 12);
+    $("matlist").innerHTML = shown.map(r =>
+      `<div><span>${r.dept} ${MONTHS[r.m]}</span><b class="${r.v > 0 ? "pos" : "neg"}">${sgn(r.v)} (${(r.pct * 100).toFixed(1)}%)</b></div>`
+    ).join("") + (list.length > shown.length ? `<div><span>…and ${list.length - shown.length} more</span><b></b></div>` : "");
+  }
+
+  function drawDept() {
+    const data = DEPTS.map(d => {
+      const rs = ROWS.filter(r => r.dept === d), s = stats(rs);
+      return { d, ...s, pct: s.net / s.budget };
+    }).sort((a, b) => b.net - a.net);
+    const t = stats(ROWS);
+    $("dept").innerHTML =
+      `<tr><th>Department</th><th>Budget</th><th>Actual</th><th>Variance</th><th>Var %</th><th>Gross misses</th><th>Gross accuracy</th><th>Material</th></tr>` +
+      data.map(r => `<tr><td>${r.d}</td><td>${usd(r.budget)}</td><td>${usd(r.actual)}</td>` +
+        `<td class="${r.net > 0 ? "pos" : "neg"}">${sgn(r.net)}</td><td>${(r.pct * 100).toFixed(1)}%</td>` +
+        `<td>${usd(r.gross)}</td><td>${pct1(r.grossAcc)}</td><td>${r.mat}</td></tr>`).join("") +
+      `<tr class="total"><td>Total</td><td>${usd(t.budget)}</td><td>${usd(t.actual)}</td><td>${sgn(t.net)}</td>` +
+      `<td>${(t.net / t.budget * 100).toFixed(1)}%</td><td>${usd(t.gross)}</td><td>${pct1(t.grossAcc)}</td><td>${t.mat}</td></tr>`;
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
