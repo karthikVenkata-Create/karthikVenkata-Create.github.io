@@ -88,6 +88,12 @@
     return { g5, gTerm, years, runwayGrowth, margin };
   }
 
+  // Discount rate that makes the DCF equal the price: the yearly return a buyer
+  // at that price should expect if the forecast plays out
+  function impliedReturn(a, price) {
+    return solve(w => price - value(a, { wacc: w, terminalG: Math.min(a.terminalG, w - 0.0051) }), 0.035, 0.20);
+  }
+
   function sensitivity(a) {
     const waccs = [-0.01, -0.005, 0, 0.005, 0.01].map(d => a.wacc + d);
     const gs = [0.02, 0.025, 0.03, 0.035, 0.04];
@@ -141,7 +147,7 @@
     return { upside: up, rating: up > 0.10 ? "BUY" : up < -0.10 ? "SELL" : "HOLD" };
   }
 
-  const api = { BASE, SCENARIOS, fade, dcf, value, reverseDcf, sensitivity, monteCarlo, rating };
+  const api = { BASE, SCENARIOS, fade, dcf, value, reverseDcf, impliedReturn, sensitivity, monteCarlo, rating };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.CostcoModel = api;
 })(this);
