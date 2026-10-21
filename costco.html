@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Costco Valuation Model | Venkata Karthik</title>
+<meta name="description" content="Interactive Costco DCF: change the assumptions and see the value, reverse DCF and Monte Carlo update.">
+<style>
+:root{
+  --bg:#f5f5f5; --card:#fff; --ink:#222; --muted:#5c6670; --line:#e3e6ea;
+  --accent:#0969da; --accent-soft:#9cc7f5; --sell:#cf222e; --buy:#1a7f37; --hold:#6e7781;
+}
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--ink);line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 16px 48px}
+a{color:var(--accent)}
+h1{margin:0 0 4px;font-size:28px}
+h2{font-size:18px;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);padding:20px;margin-top:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.top-links{font-size:14px;margin-bottom:18px}
+.top-links a{margin-right:14px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.presets button{font:inherit;font-size:14px;padding:7px 12px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer}
+.presets button:hover{border-color:var(--accent)}
+.presets button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.inputs{display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+.field label{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.field label b{font-variant-numeric:tabular-nums}
+.field input[type=range]{width:100%;accent-color:var(--accent)}
+.field small{color:var(--muted);font-size:12px}
+.headline{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 18px}
+.big{font-size:44px;font-weight:bold;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:4px 12px;border-radius:999px;color:#fff;font-weight:bold;font-size:15px}
+.badge.SELL{background:var(--sell)} .badge.BUY{background:var(--buy)} .badge.HOLD{background:var(--hold)}
+.vs{color:var(--muted)}
+.rows div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:15px}
+.rows div:last-child{border-bottom:0}
+.rows b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.note{color:var(--muted);font-size:13px;margin:10px 0 0}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:normal}
+td.mid{background:#eaf2fd;font-weight:bold}
+td.over{color:var(--buy);font-weight:bold}
+.scroll{overflow-x:auto}
+#hist{width:100%;height:auto;display:block}
+#hist .bar{fill:var(--accent)}
+#hist .bar:hover{fill:#0550ae}
+#hist text{font-size:11px;fill:var(--muted)}
+.footer{color:var(--muted);font-size:13px;margin-top:24px}
+@media (max-width:720px){
+  .grid2,.inputs{grid-template-columns:1fr}
+  .big{font-size:36px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top-links">
+  <a href="./">← Back to portfolio</a>
+  <a href="https://github.com/karthikVenkata-Create/costco-equity-valuation-engine">Full model on GitHub</a>
+</div>
+
+<h1>Costco Valuation Model</h1>
+<p class="sub">This is the DCF from my Costco project, running in your browser. Change any assumption and everything below updates. It starts from my October 20, 2026 live run, when Costco was at $992.35. My call is SELL with a $493 target. Try to talk me out of it.</p>
+
+<div class="card">
+  <h2>Start from a scenario</h2>
+  <div class="presets" id="presets">
+    <button data-p="base" class="on">My base case</button>
+    <button data-p="street">Street-style: 10% growth, 4% long-term</button>
+    <button data-p="margins">Margins reach 5%</button>
+    <button data-p="cheap">Lower discount rate (6.5%)</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Assumptions</h2>
+  <div class="inputs" id="inputs"></div>
+  <p class="note">Growth and margin fade in a straight line from year 1 to year 5. Starting numbers are Costco's FY2026 actuals: $303.2B revenue, $20.2B cash, $6.2B debt, 443.3M shares, 24% tax rate.</p>
+</div>
+
+<div class="card">
+  <div class="headline">
+    <div>
+      <div class="vs">Value per share</div>
+      <div class="big" id="val">–</div>
+    </div>
+    <div>
+      <span class="badge" id="badge">–</span>
+      <div class="vs" id="updown" style="margin-top:6px">–</div>
+    </div>
+  </div>
+  <p class="note" id="tvnote"></p>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>What is the price assuming?</h2>
+    <p class="note" style="margin:0 0 6px">Each line solves for one input that makes the DCF equal the share price, keeping everything else as set above.</p>
+    <div class="rows" id="rev"></div>
+    <p class="note">For reference: Costco's revenue has compounded about 8.7% a year since FY2004, and its FY2026 operating margin was 3.85%.</p>
+  </div>
+  <div class="card">
+    <h2>10,000 simulations</h2>
+    <div class="rows" id="mcrows"></div>
+    <svg id="hist" viewBox="0 0 460 190" role="img" aria-label="Histogram of simulated values"></svg>
+    <p class="note">Each run draws growth (±4 pts), margin (−0.5 to +1 pt), discount rate (±1.5 pts) and long-term growth (2–4%) around your inputs.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Five-year cash flow ($ millions)</h2>
+  <div class="scroll"><table id="dcf"></table></div>
+</div>
+
+<div class="card">
+  <h2>Sensitivity: value per share</h2>
+  <p class="note" style="margin:0 0 8px">Rows are the discount rate, columns are long-term growth. Green cells are above the share price.</p>
+  <div class="scroll"><table id="sens"></table></div>
+</div>
+
+<p class="footer">Student project, not investment advice. The live version in Python pulls current prices, peer multiples, the Treasury yield and beta from Yahoo Finance. This page can't fetch live data, so it uses the numbers from my last live run. The simulation here uses a different random generator than the Python version, so its results can differ by a few dollars.</p>
+
+</div>
+
+<script src="costco-model.js"></script>
+<script>
+(function () {
+  const M = window.CostcoModel;
+
+  const FIELDS = [
+    { k: "price",  label: "Share price",                min: 300,  max: 1500, step: 1,     fmt: v => "$" + v.toFixed(2), hint: "Oct 20, 2026 close: $992.35" },
+    { k: "wacc",   label: "Discount rate (WACC)",       min: 0.05, max: 0.12, step: 0.0005, fmt: pct2, hint: "Oct 20 live run: 7.83%" },
+    { k: "g1",     label: "Revenue growth, year 1",     min: 0,    max: 0.20, step: 0.0025, fmt: pct1, hint: "FY2026 actual: 10.1%" },
+    { k: "g5",     label: "Revenue growth, year 5",     min: 0,    max: 0.20, step: 0.0025, fmt: pct1 },
+    { k: "m1",     label: "Operating margin, year 1",   min: 0.02, max: 0.10, step: 0.0005, fmt: pct2, hint: "FY2026 actual: 3.85%" },
+    { k: "m5",     label: "Operating margin, year 5",   min: 0.02, max: 0.10, step: 0.0005, fmt: pct2 },
+    { k: "tg",     label: "Long-term growth after 2031", min: 0,   max: 0.05, step: 0.0025, fmt: pct1, hint: "Must stay below the discount rate" },
+    { k: "stc",    label: "Sales-to-capital",           min: 3,    max: 15,   step: 0.5,    fmt: v => v.toFixed(1) + "x", hint: "Revenue per $1 reinvested. Higher = cheaper growth" },
+  ];
+
+  const PRESETS = {
+    base:    { price: 992.35, wacc: 0.078256, g1: 0.08, g5: 0.06, m1: 0.039, m5: 0.041, tg: 0.03, stc: 8 },
+    street:  { g1: 0.10, g5: 0.10, tg: 0.04 },
+    margins: { m1: 0.040, m5: 0.050 },
+    cheap:   { wacc: 0.065 },
+  };
+
+  let state = Object.assign({}, PRESETS.base);
+
+  function pct1(v) { return (v * 100).toFixed(1) + "%"; }
+  function pct2(v) { return (v * 100).toFixed(2) + "%"; }
+  function usd(v, d) { return isFinite(v) ? "$" + v.toLocaleString("en-US", { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }) : "n/a"; }
+  function $(id) { return document.getElementById(id); }
+
+  // Build sliders
+  const box = $("inputs");
+  FIELDS.forEach(f => {
+    const div = document.createElement("div");
+    div.className = "field";
+    div.innerHTML = `<label for="in-${f.k}"><span>${f.label}</span><b id="out-${f.k}"></b></label>
+      <input type="range" id="in-${f.k}" min="${f.min}" max="${f.max}" step="${f.step}">
+      ${f.hint ? `<small>${f.hint}</small>` : ""}`;
+    box.appendChild(div);
+    div.querySelector("input").addEventListener("input", e => {
+      state[f.k] = parseFloat(e.target.value);
+      markPreset(null);
+      schedule();
+    });
+  });
+
+  function syncInputs() {
+    FIELDS.forEach(f => {
+      $("in-" + f.k).value = state[f.k];
+      $("out-" + f.k).textContent = f.fmt(state[f.k]);
+    });
+  }
+
+  function markPreset(key) {
+    document.querySelectorAll("#presets button").forEach(b => b.classList.toggle("on", b.dataset.p === key));
+  }
+
+  document.querySelectorAll("#presets button").forEach(b => b.addEventListener("click", () => {
+    state = Object.assign({}, PRESETS.base, PRESETS[b.dataset.p]);
+    markPreset(b.dataset.p);
+    syncInputs();
+    schedule();
+  }));
+
+  let pending = false;
+  function schedule() {
+    FIELDS.forEach(f => $("out-" + f.k).textContent = f.fmt(state[f.k]));
+    if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; render(); }); }
+  }
+
+  function render() {
+    const s = state;
+    const tg = Math.min(s.tg, s.wacc - 0.0051);
+    const a = { growth: M.fade(s.g1, s.g5, 5), margin: M.fade(s.m1, s.m5, 5),
+                salesToCapital: s.stc, terminalG: tg, wacc: s.wacc };
+    const d = M.dcf(a);
+    const target = Math.round(d.value);
+    const r = M.rating(target, s.price);
+
+    $("val").textContent = usd(d.value, 2);
+    const badge = $("badge");
+    badge.textContent = r.rating;
+    badge.className = "badge " + r.rating;
+    $("updown").textContent = (r.upside >= 0 ? "+" : "") + (r.upside * 100).toFixed(1) + "% vs " + usd(s.price, 2);
+    $("tvnote").textContent = `${Math.round(d.tvShare * 100)}% of the value comes from years after 2031.` +
+      (tg < s.tg ? " Long-term growth was capped just below the discount rate." : "");
+
+    // Reverse DCF
+    const rev = M.reverseDcf(a, s.price, 0.10);
+    $("rev").innerHTML = [
+      ["Growth for 5 years, nothing else changed", isFinite(rev.g5) ? pct1(rev.g5) : "n/a"],
+      ["Growth forever after 2031", isFinite(rev.gTerm) ? pct1(rev.gTerm) : "above the discount rate"],
+      ["Years of 10% growth before slowing", rev.years === null ? "over 60" : rev.years],
+      ["2031 operating margin needed", isFinite(rev.margin) ? pct1(rev.margin) : "n/a"],
+    ].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("");
+
+    // Monte Carlo
+    const mc = M.monteCarlo(a, s.price, 10000, 42);
+    const below = Math.round(mc.shareBelow * 10000);
+    $("mcrows").innerHTML = [
+      ["Bear (10th percentile)", usd(mc.p10)],
+      ["Middle (median)", usd(mc.p50)],
+      ["Bull (90th percentile)", usd(mc.p90)],
+      ["Runs below the share price", below.toLocaleString() + " of 10,000"],
+    ].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("");
+    drawHist(mc.values, target, s.price);
+
+    // DCF table
+    const rows = d.rows;
+    const fmt = v => Math.round(v).toLocaleString("en-US");
+    $("dcf").innerHTML =
+      `<tr><th></th>${rows.map(x => `<th>${x.year}</th>`).join("")}</tr>` +
+      [["Revenue", "rev"], ["Operating income", "ebit"], ["After-tax operating income", "nopat"],
+       ["Reinvestment", "reinvest"], ["Free cash flow", "fcff"]]
+        .map(([lab, k]) => `<tr><td>${lab}</td>${rows.map(x => `<td>${fmt(x[k])}</td>`).join("")}</tr>`).join("");
+
+    // Sensitivity
+    const sens = M.sensitivity(a);
+    $("sens").innerHTML =
+      `<tr><th>WACC \\ growth</th>${sens.gs.map(g => `<th>${pct1(g)}</th>`).join("")}</tr>` +
+      sens.grid.map((row, i) => `<tr><td>${pct2(sens.waccs[i])}</td>${row.map((v, j) => {
+        const cls = v > s.price ? "over" : (i === 2 && Math.abs(sens.gs[j] - tg) < 1e-9 ? "mid" : "");
+        return `<td class="${cls}">${usd(v)}</td>`;
+      }).join("")}</tr>`).join("");
+  }
+
+  function drawHist(vals, target, price) {
+    const svg = $("hist"), W = 460, H = 190, L = 8, R = 452, T = 22, B = 160;
+    const sorted = vals.slice().sort((x, y) => x - y);
+    let lo = sorted[Math.floor(sorted.length * 0.002)], hi = sorted[Math.floor(sorted.length * 0.998)];
+    const span = hi - lo || 1; lo -= span * 0.05; hi += span * 0.05;
+    const bins = 36, w = (hi - lo) / bins, counts = new Array(bins).fill(0);
+    vals.forEach(v => { const i = Math.floor((v - lo) / w); if (i >= 0 && i < bins) counts[i]++; });
+    const max = Math.max(...counts);
+    const X = v => L + (R - L) * (v - lo) / (hi - lo);
+    let out = "";
+    counts.forEach((c, i) => {
+      const x0 = X(lo + i * w), x1 = X(lo + (i + 1) * w), h = (B - T) * c / max;
+      out += `<rect class="bar" x="${x0.toFixed(1)}" y="${(B - h).toFixed(1)}" width="${Math.max(x1 - x0 - 1.5, 1).toFixed(1)}" height="${h.toFixed(1)}" rx="1.5"><title>${usd(lo + i * w)}–${usd(lo + (i + 1) * w)}: ${c} runs</title></rect>`;
+    });
+    out += `<line x1="${L}" y1="${B}" x2="${R}" y2="${B}" stroke="#d0d7de"/>`;
+    for (let k = 0; k <= 4; k++) {
+      const v = lo + (hi - lo) * k / 4;
+      out += `<text x="${X(v)}" y="${B + 16}" text-anchor="${k === 0 ? "start" : k === 4 ? "end" : "middle"}">${usd(v)}</text>`;
+    }
+    if (target >= lo && target <= hi)
+      out += `<line x1="${X(target)}" y1="${T - 6}" x2="${X(target)}" y2="${B}" stroke="#222" stroke-dasharray="4 3"/>` +
+             `<text x="${X(target) + 4}" y="${T - 8}" style="fill:#222">Value ${usd(target)}</text>`;
+    if (price >= lo && price <= hi)
+      out += `<line x1="${X(price)}" y1="${T - 6}" x2="${X(price)}" y2="${B}" stroke="#cf222e" stroke-width="2"/>` +
+             `<text x="${X(price) - 4}" y="${T - 8}" text-anchor="end" style="fill:#cf222e">Price ${usd(price)}</text>`;
+    else if (price > hi)
+      out += `<text x="${R}" y="${T - 8}" text-anchor="end" style="fill:#cf222e">Price ${usd(price)} is off the chart →</text>`;
+    else
+      out += `<text x="${L}" y="${T - 8}" style="fill:#cf222e">← Price ${usd(price)} is off the chart</text>`;
+    svg.innerHTML = out;
+  }
+
+  syncInputs();
+  render();
+})();
+</script>
+</body>
+</html>
