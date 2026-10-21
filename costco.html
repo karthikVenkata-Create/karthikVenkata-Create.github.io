@@ -66,7 +66,7 @@ td.over{color:var(--buy);font-weight:bold}
 </div>
 
 <h1>Costco Valuation Model</h1>
-<p class="sub">This is the DCF from my Costco project, running in your browser. Change any assumption and everything below updates. It starts from my October 20, 2026 live run, when Costco was at $992.35. My call is SELL with a $493 target. Try to talk me out of it.</p>
+<p class="sub">This is the DCF from my Costco project, running in your browser. Change any assumption and everything below updates. It starts from my October 20, 2026 live run, when Costco was at $992.35. My call is SELL with a $511 target. Try to talk me out of it.</p>
 
 <div class="card">
   <h2>Start from a scenario</h2>
@@ -82,7 +82,7 @@ td.over{color:var(--buy);font-weight:bold}
 <div class="card">
   <h2>Assumptions</h2>
   <div class="inputs" id="inputs"></div>
-  <p class="note">Growth and margin fade in a straight line from year 1 to the final year. Starting numbers are Costco's FY2026 actuals: $303.2B revenue, $20.2B cash, $6.2B debt, 443.3M shares, 24% tax rate.</p>
+  <p class="note">Three stages: growth and margin move in a straight line through the fast-growth years, then growth glides down to the long-term rate, then the long-term rate holds forever. Starting numbers are Costco's FY2026 actuals: $303.2B revenue, $20.2B cash, $6.2B debt, 443.3M shares, 24% tax rate.</p>
 </div>
 
 <div class="card">
@@ -141,20 +141,21 @@ td.over{color:var(--buy);font-weight:bold}
     { k: "price",  label: "Share price",                min: 300,  max: 1500, step: 1,     fmt: v => "$" + v.toFixed(2), hint: "Oct 20, 2026 close: $992.35" },
     { k: "wacc",   label: "Discount rate (WACC)",       min: 0.05, max: 0.12, step: 0.0005, fmt: pct2, hint: "Oct 20 live run: 7.83%" },
     { k: "g1",     label: "Revenue growth, year 1",     min: 0,    max: 0.20, step: 0.0025, fmt: pct1, hint: "FY2026 actual: 10.1%" },
-    { k: "g5",     label: "Revenue growth, final year",  min: 0,    max: 0.20, step: 0.0025, fmt: pct1 },
+    { k: "g5",     label: "Revenue growth, end of fast-growth years", min: 0, max: 0.20, step: 0.0025, fmt: pct1 },
     { k: "m1",     label: "Operating margin, year 1",   min: 0.02, max: 0.10, step: 0.0005, fmt: pct2, hint: "FY2026 actual: 3.85%" },
-    { k: "m5",     label: "Operating margin, final year", min: 0.02, max: 0.10, step: 0.0005, fmt: pct2 },
-    { k: "yrs",    label: "Forecast length",            min: 5,    max: 10,   step: 1,      fmt: v => v + " years", hint: "Longer = more years of fast growth before 3%-style long-term growth" },
+    { k: "m5",     label: "Operating margin, end of fast-growth years", min: 0.02, max: 0.10, step: 0.0005, fmt: pct2, hint: "Held at this level after that" },
+    { k: "yrs",    label: "Fast-growth years",          min: 3,    max: 15,   step: 1,      fmt: v => v + " years", hint: "Growth fades from year 1 to this level" },
+    { k: "fade",   label: "Then glide down to long-term growth over", min: 0, max: 10, step: 1, fmt: v => v + " years", hint: "0 = drop straight to long-term growth" },
     { k: "tg",     label: "Long-term growth after the forecast", min: 0, max: 0.05, step: 0.0025, fmt: pct1, hint: "Must stay below the discount rate" },
     { k: "stc",    label: "Sales-to-capital",           min: 3,    max: 15,   step: 0.5,    fmt: v => v.toFixed(1) + "x", hint: "Revenue per $1 reinvested. Higher = cheaper growth" },
   ];
 
   const PRESETS = {
-    base:    { price: 992.35, wacc: 0.078256, g1: 0.08, g5: 0.06, m1: 0.039, m5: 0.041, yrs: 5, tg: 0.03, stc: 8 },
+    base:    { price: 992.35, wacc: 0.078256, g1: 0.08, g5: 0.06, m1: 0.039, m5: 0.041, yrs: 5, fade: 5, tg: 0.03, stc: 8 },
     street:  { g1: 0.10, g5: 0.10, tg: 0.04 },
     margins: { m1: 0.040, m5: 0.050 },
     cheap:   { wacc: 0.065 },
-    bull:    { yrs: 10, g1: 0.09, g5: 0.08, m1: 0.039, m5: 0.048, wacc: 0.068256 },
+    bull:    { yrs: 10, fade: 5, g1: 0.09, g5: 0.08, m1: 0.039, m5: 0.048, wacc: 0.068256 },
   };
 
   const TREASURY = 0.0512;
@@ -208,8 +209,12 @@ td.over{color:var(--buy);font-weight:bold}
   function render() {
     const s = state;
     const tg = Math.min(s.tg, s.wacc - 0.0051);
-    const a = { growth: M.fade(s.g1, s.g5, s.yrs), margin: M.fade(s.m1, s.m5, s.yrs),
+    // Three stages: fast-growth years, a straight-line glide down to long-term growth, then the terminal value
+    const glide = Array.from({ length: s.fade }, (_, i) => s.g5 - (s.g5 - tg) * (i + 1) / s.fade);
+    const a = { growth: M.fade(s.g1, s.g5, s.yrs).concat(glide),
+                margin: M.fade(s.m1, s.m5, s.yrs).concat(Array(s.fade).fill(s.m5)),
                 salesToCapital: s.stc, terminalG: tg, wacc: s.wacc };
+    const endYear = 2026 + a.growth.length;
     const d = M.dcf(a);
     const target = Math.round(d.value);
     const r = M.rating(target, s.price);
@@ -219,16 +224,16 @@ td.over{color:var(--buy);font-weight:bold}
     badge.textContent = r.rating;
     badge.className = "badge " + r.rating;
     $("updown").textContent = (r.upside >= 0 ? "+" : "") + (r.upside * 100).toFixed(1) + "% vs " + usd(s.price, 2);
-    $("tvnote").textContent = `${Math.round(d.tvShare * 100)}% of the value comes from years after ${2026 + s.yrs}.` +
+    $("tvnote").textContent = `${Math.round(d.tvShare * 100)}% of the value comes from years after ${endYear}.` +
       (tg < s.tg ? " Long-term growth was capped just below the discount rate." : "");
 
     // Reverse DCF
     const rev = M.reverseDcf(a, s.price, 0.10);
     $("rev").innerHTML = [
-      [`Growth for ${s.yrs} years, nothing else changed`, isFinite(rev.g5) ? pct1(rev.g5) : "n/a"],
-      [`Growth forever after ${2026 + s.yrs}`, isFinite(rev.gTerm) ? pct1(rev.gTerm) : "above the discount rate"],
+      [`Average growth every year to ${endYear}, nothing else changed`, isFinite(rev.g5) ? pct1(rev.g5) : "n/a"],
+      [`Growth forever after ${endYear}`, isFinite(rev.gTerm) ? pct1(rev.gTerm) : "above the discount rate"],
       ["Years of 10% growth before slowing", rev.years === null ? "over 60" : rev.years],
-      [`${2026 + s.yrs} operating margin needed`, isFinite(rev.margin) ? pct1(rev.margin) : "n/a"],
+      [`${endYear} operating margin needed`, isFinite(rev.margin) ? pct1(rev.margin) : "n/a"],
     ].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("");
 
     const ret = M.impliedReturn(a, s.price);
