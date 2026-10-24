@@ -53,10 +53,10 @@ Built a valuation model for Costco that pulls live market data, runs a DCF and a
 </div>
 
 <div class="card">
-<h3>FP&A Budget Variance Pipeline (Python + Excel)</h3>
-Analyzed $28.2M of 2024 operating spend across 8 departments and 12 months. The plan looked 99.8% accurate, but only because overspends and underspends cancelled out. Counting every miss, accuracy was 95.7%, or $1.21M of misses, and 7 of 96 department-months broke my materiality rule (over $25K and over 5%). I first built this in Excel, found my own headline didn't hold up, rebuilt the workbook, then turned it into a Python pipeline that reconciles to the workbook to the dollar.<br><br>
+<h3>FP&A Budget Variance Pipeline (Alteryx)</h3>
+Analyzed $28.2M of 2024 operating spend across 8 departments and 12 months. The plan looked 99.8% accurate, but only because overspends and underspends cancelled out. Counting every miss, accuracy was 95.7%, or $1.21M of misses, and 7 of 96 department-months broke my materiality rule (over $25K and over 5%). I first built this in Excel, found my own headline didn't hold up, rebuilt the workbook, then automated it as an Alteryx Designer workflow. It reads each department's file, logs every dropped row with its reason, raises an error if the totals don't tie out, and matches the workbook to the dollar.<br><br>
 <a href="fpa.html"><b>Try the analysis</b></a> &nbsp;•&nbsp;
-<a href="https://github.com/karthikVenkata-Create/fpa-budget-variance-pipeline">View on GitHub</a>
+<a href="https://github.com/karthikVenkata-Create/fpa-budget-variance-pipeline">View the workflow on GitHub</a>
 </div>
 
 <div class="card">

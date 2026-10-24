@@ -70,11 +70,12 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
 
 <div class="top-links">
   <a href="./">← Back to portfolio</a>
-  <a href="https://github.com/karthikVenkata-Create/fpa-budget-variance-pipeline">Full pipeline on GitHub</a>
+  <a href="https://github.com/karthikVenkata-Create/fpa-budget-variance-pipeline">Alteryx workflow on GitHub</a>
+  <a href="https://github.com/karthikVenkata-Create/fpa-budget-variance-pipeline/archive/refs/heads/main.zip">Download the workflow (.zip)</a>
 </div>
 
 <h1>FP&amp;A Budget Variance Analysis</h1>
-<p class="sub">This is $28.2M of 2024 operating spend across 8 departments and 12 months, budget versus actual. The plan looks 99.8% accurate, but that's only because the misses cancel out. Change the materiality rule below to see which department-months get flagged and why the rule needs both a dollar test and a percent test.</p>
+<p class="sub">This is $28.2M of 2024 operating spend across 8 departments and 12 months, budget versus actual. The plan looks 99.8% accurate, but that's only because the misses cancel out. Change the materiality rule below to see which department-months get flagged and why the rule needs both a dollar test and a percent test. The full pipeline is an Alteryx Designer workflow (below); this page runs the same math in your browser.</p>
 
 <div class="card">
   <h2>Materiality rule</h2>
@@ -149,7 +150,14 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
   <p class="note">This is a practice dataset, and the monthly phasing is synthetic. The annual and department totals still hold up, but month-level patterns like the R&amp;D Q4 underspend show the method rather than a real finding. In a real company, phasing this lumpy would be the first thing I'd question, because it makes monthly variances almost meaningless.</p>
 </div>
 
-<p class="footer">Student project using a practice dataset, not a real company's books. The numbers here match the Python pipeline and my Excel workbook to the dollar: $28,221,717 budget, $28,171,672 actual, 99.8% net accuracy, 95.7% gross accuracy, 7 of 96 material misses under my rule.</p>
+<div class="card">
+  <h2>The Alteryx workflow</h2>
+  <p class="note" style="margin:0 0 10px">The real pipeline runs in Alteryx Designer. It reads each department's file with one wildcard input, logs every dropped row with its file, line and reason, builds the summaries from every row, and raises an error if the numbers don't hold together (for example, rows read must equal rows kept plus rows dropped). Alteryx is desktop software, so there's no way to run it in a browser. Download the workflow and open it in Designer, or read through it on GitHub.</p>
+  <a href="images/fpa_alteryx_canvas.png"><img src="images/fpa_alteryx_canvas.png" alt="Alteryx Designer canvas for the FP&amp;A variance workflow" style="width:100%;height:auto;border:1px solid var(--line);border-radius:6px"></a>
+  <p class="note"><a href="https://github.com/karthikVenkata-Create/fpa-budget-variance-pipeline">View the workflow on GitHub</a> &nbsp;•&nbsp; <a href="https://github.com/karthikVenkata-Create/fpa-budget-variance-pipeline/archive/refs/heads/main.zip">Download (.zip)</a></p>
+</div>
+
+<p class="footer">Student project using a practice dataset, not a real company's books. The numbers here match the Alteryx workflow and my Excel workbook to the dollar: $28,221,717 budget, $28,171,672 actual, 99.8% net accuracy, 95.7% gross accuracy, 7 of 96 material misses under my rule.</p>
 
 </div>
 
