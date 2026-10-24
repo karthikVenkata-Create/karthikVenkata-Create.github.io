@@ -31,7 +31,7 @@ box-shadow:0 2px 6px rgba(0,0,0,0.1);
 <body>
 
 <h1>Venkata Karthik</h1>
-<p>Finance & Business Analytics | Excel • SQL • Power BI • Python • R • Tableau</p>
+<p>Finance & Business Analytics | Excel • SQL • Python • R • Tableau • Alteryx • Celonis</p>
 
 <div class="section">
 <h2>About</h2>
@@ -73,10 +73,10 @@ Rebuilt an eight-round hedging game from my Fall 2025 weekly decision memos, whe
 <a href="https://github.com/karthikVenkata-Create/Commodity-Hedging-Simulation">View on GitHub</a>
 </div>
 
-
 <div class="card">
-<h3>Chocolate Sales Analysis (SQL)</h3>
-Used MySQL to analyze sales transactions and identify revenue patterns across products and regions.
+<h3>Celonis Multi-Currency Converter &amp; Process Mining (Celonis)</h3>
+Built a live currency converter in Celonis Studio. A View sends a base currency, an amount and up to six target currencies to an Action Flow, which loops through each target, calls the Frankfurter FX API and sends every conversion back in one response. It worked for one to five currencies and then failed when all six were picked. The run logs showed why: the list included the base currency itself, so the flow asked the API to convert CAD into CAD, got a 422 "bad currency pair" error, and the whole run rolled back. I added a router with a validation filter before the API call so any target that matches the base gets skipped, then deployed the fix and re-tested with all six selected. The converter started from the Celonis Master Data Wrangling case study; the router and the fix are my additions. In progress: a Procure-to-Pay process mining dashboard on a 500-order event log I generated in Python, with problems like invoices arriving before purchase orders, skipped approvals and late payments built in for the analysis to find.<br><br>
+<a href="https://github.com/karthikVenkata-Create/celonis-process-map-dashboard"><b>View on GitHub</b></a>
 </div>
 
 </div>
@@ -84,7 +84,7 @@ Used MySQL to analyze sales transactions and identify revenue patterns across pr
 <div class="section">
 <h2>Skills</h2>
 <div class="card">
-Excel • SQL • Power BI • Python • R • Tableau • Data Analysis • Financial Analysis • Portfolio Analysis • Derivatives &amp; Risk Modeling • Dashboard Design
+Excel • SQL • Power BI • Python • R • Tableau • Alteryx • Celonis • Data Analysis • Financial Analysis • Portfolio Analysis • Derivatives &amp; Risk Modeling • Process Automation &amp; API Integration • Dashboard Design
 </div>
 </div>
 
