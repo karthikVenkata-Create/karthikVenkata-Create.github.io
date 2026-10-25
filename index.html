@@ -75,9 +75,9 @@ Rebuilt an eight-round hedging game from my Fall 2025 weekly decision memos, whe
 </div>
 
 <div class="card">
-<h3>Live Multi-Currency Converter &amp; Process Mining</h3>
-Built a live currency converter in Celonis Studio. A View sends a base currency, an amount and up to six target currencies to an Action Flow, which loops through each target, calls the Frankfurter FX API and sends every conversion back in one response. It worked for one to five currencies and then failed when all six were picked. The run logs showed why: the list included the base currency itself, so the flow asked the API to convert CAD into CAD, got a 422 "bad currency pair" error, and the whole run rolled back. I added a router with a validation filter before the API call so any target that matches the base gets skipped, then deployed the fix and re-tested with all six selected. The converter started from the Celonis Master Data Wrangling case study; the router and the fix are my additions. In progress: a Procure-to-Pay process mining dashboard on a 500-order event log I generated in Python, with problems like invoices arriving before purchase orders, skipped approvals and late payments built in for the analysis to find.<br><br>
-<a href="https://github.com/karthikVenkata-Create/celonis-process-map-dashboard"><b>View on GitHub</b></a>
+<h3>Accounts Payable Audit: Duplicate Payments &amp; Control Breaks</h3>
+Audited nine months of purchasing and payments entirely in SQL: 500 purchase orders, 4,753 process events and $2.57M of spend across 8 vendors. I found $72.2K paid out that didn't need to be (about 2.8% of spend) and $328K of spend that went around a control. The biggest find was duplicate payments: a check on exact invoice number finds none, because the second copies were entered as KP41343 instead of KP-41343. Normalizing the numbers found 10 invoices paid twice, for $42K. The three-way match showed the payment block was catching over-billing, but 29 blocked invoices were released and paid in full anyway. I also found the system's "Paid On Time" label was wrong on 17 invoices, so I recomputed every due date from the dates instead. Built in DuckDB as ten SQL files with integrity checks that stop the run if the numbers don't tie out. Practice dataset.<br><br>
+<a href="https://github.com/karthikVenkata-Create/Accounts-Payable-Audit-SQL"><b>View on GitHub</b></a>
 </div>
 
 </div>
