@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FP&amp;A Budget Variance | Venkata Karthik</title>
-<meta name="description" content="Interactive budget vs actual variance analysis: change the materiality rule and see which department-months get flagged.">
+<meta name="description" content="Interactive budget vs actual variance analysis with adjustable materiality thresholds that flag department-months.">
 <style>
 :root{
   --bg:#f5f5f5; --card:#fff; --ink:#222; --muted:#5c6670; --line:#e3e6ea;
@@ -75,7 +75,7 @@ tr.total td{font-weight:bold;border-top:2px solid var(--line)}
 </div>
 
 <h1>FP&amp;A Budget Variance Analysis</h1>
-<p class="sub">This is $28.2M of 2024 operating spend across 8 departments and 12 months, budget versus actual. The plan looks 99.8% accurate, but that's only because the misses cancel out. Change the materiality rule below to see which department-months get flagged and why the rule needs both a dollar test and a percent test. The full pipeline is an Alteryx Designer workflow (below); this page runs the same math in your browser.</p>
+<p class="sub">This is $28.2M of 2024 operating spend across 8 departments and 12 months, budget versus actual. The plan looks 99.8% accurate, but that's only because the misses cancel out. I added adjustable materiality thresholds that show which department-months get flagged, and why the rule needs both a dollar test and a percent test. The full pipeline is an Alteryx Designer workflow (below); this page runs the same math in the browser.</p>
 
 <div class="card">
   <h2>Materiality rule</h2>
