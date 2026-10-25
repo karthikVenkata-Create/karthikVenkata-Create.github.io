@@ -1,2 +1,2 @@
 # karthikVenkata-Create.github.io
-Portfolio showcasing finance and business analytics projects built with Excel, SQL, Power BI, and Python.
+Portfolio site for Karthik Bommisetty: finance and business analytics projects in valuation, FP&A, portfolio risk, hedging and process automation, built with Excel, SQL, Python, R, Tableau and Alteryx.
