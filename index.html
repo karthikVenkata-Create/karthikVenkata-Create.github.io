@@ -38,7 +38,7 @@ box-shadow:0 2px 6px rgba(0,0,0,0.1);
 <div class="card">
 I'm a grad student at UIC working on a dual MBA in Finance and MS in Business Analytics, graduating December 2027. What I enjoy most is the point where finance and data meet: using data to get to a clearer financial answer.
 <br><br>
-The projects below cover valuation, FP&amp;A, portfolio risk, hedging and process automation, built with Excel, SQL, Python, R, Tableau and Alteryx, plus an AI analyst on the Claude API that you can chat with. I'm looking for internships in FP&amp;A, financial analysis, investments, risk or business analytics.
+The projects below cover valuation, FP&amp;A, portfolio risk, hedging and process automation, built with Excel, SQL, Python, R, Tableau and Alteryx, plus an AI analyst on the Claude API with a live chat app. I'm looking for internships in FP&amp;A, financial analysis, investments, risk or business analytics.
 </div>
 </div>
 
@@ -70,9 +70,9 @@ Tested whether optimizing a portfolio of five auto stocks (Tesla, Toyota, Honda,
 <div class="card">
 <h3>Commodity Hedging &amp; AI Treasury Analyst</h3>
 Rebuilt an eight-round hedging game from my Fall 2025 weekly decision memos, where I hedged a producer's 100,000 units a round with swaps, zero-cost collars and a floating slice. My hedges cost 4.6% of revenue ($74.7M vs $78.3M unhedged) and cut volatility 30%. Looking only at what happened, the hedges seemed unnecessary, because the unhedged book never hit the bankruptcy line either. So I priced every collar with Black-76 and ran each round's position through 10,000 Monte Carlo scenarios. Unhedged, there was about a 25% chance of the $20M bankruptcy penalty each round, and my hedges cut that to about 1%. The cost was the investment: the hedges lowered the odds of funding it from 26% to 18%.<br><br>
-Then I built an AI treasury analyst on top of it with the Claude API, and you can chat with it. Ask what I did in a round, or a what-if like "what if I'd hedged 40% in Round 4?", and Claude decides which of my Python functions to run: settlement, the stress test, Black-76 pricing, or a search over my original memos. The math stays in my code, and a guardrail checks every number in the answer against what the tools returned. It also caught something I missed: in Round 7, hedging the 20,000 units I left floating would have put a floor under revenue above the $20M investment hurdle.<br><br>
+Then I built an AI treasury analyst on top of it with the Claude API, with a live chat app. It takes a question in plain English, like what would have happened if I had hedged 40% in Round 4, and Claude decides which of my Python functions to run: settlement, the stress test, Black-76 pricing, or a search over my original memos. The math stays in my code, and a guardrail checks every number in the answer against what the tools returned. It also caught something I missed: in Round 7, hedging the 20,000 units I left floating would have put a floor under revenue above the $20M investment hurdle.<br><br>
 <a href="https://karthik-hedging-analyst.streamlit.app"><img src="images/hedging_chat.png" alt="A real answer from the AI treasury analyst, with the tool calls it made" style="width:100%;max-width:720px;border-radius:6px;border:1px solid #ddd"></a><br><br>
-<a href="https://karthik-hedging-analyst.streamlit.app"><b>Chat with the AI analyst</b></a> &nbsp;•&nbsp;
+<a href="https://karthik-hedging-analyst.streamlit.app"><b>Live chat app</b></a> &nbsp;•&nbsp;
 <a href="https://github.com/karthikVenkata-Create/Commodity-Hedging-Simulation/raw/main/outputs/hedging_audit_report.xlsx">Download the Excel report</a> &nbsp;•&nbsp;
 <a href="https://github.com/karthikVenkata-Create/Commodity-Hedging-Simulation">View on GitHub</a>
 </div>
