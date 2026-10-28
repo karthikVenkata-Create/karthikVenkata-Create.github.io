@@ -47,6 +47,13 @@ h1{margin:0;font-size:clamp(40px,6vw,64px);line-height:1.02;font-weight:600;lett
 .contact-links a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.35);padding-bottom:1px}
 .contact-links a:hover{border-bottom-color:#fff}
 .contact-links a:focus-visible{outline-color:#fff}
+.copy-email{font:inherit;cursor:pointer;background:none;border:0;padding:0 0 1px;color:#fff;border-bottom:1px solid rgba(255,255,255,.35);text-align:right}
+.copy-email:hover{border-bottom-color:#fff}
+.copy-email:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:2px}
+.copy-email.inline{color:var(--link);border:1px solid var(--rule);border-radius:4px;padding:1px 10px;margin-left:6px;font-size:15px;background:var(--surface)}
+.copy-email.inline:hover{border-color:var(--link)}
+.copy-email.inline:focus-visible{outline-color:var(--link)}
+.email-text{user-select:all}
 
 /* sections */
 section{padding:72px 0 8px}
@@ -76,7 +83,7 @@ h2{margin:0 0 8px;font-size:28px;font-weight:600;color:var(--ink);letter-spacing
 .skills li{padding:3px 0}
 
 /* contact */
-.contact{padding:64px 0 80px}
+.contact{padding-top:64px;padding-bottom:80px}
 .contact p{margin:0 0 6px}
 
 footer{border-top:1px solid var(--rule);padding:20px 0 28px;color:var(--muted);font-size:14px}
@@ -110,7 +117,7 @@ footer{border-top:1px solid var(--rule);padding:20px 0 28px;color:var(--muted);f
     <nav class="contact-links" aria-label="Contact">
       <a href="https://www.linkedin.com/in/karthik-bommisetty">LinkedIn</a>
       <a href="https://github.com/karthikVenkata-Create">GitHub</a>
-      <a href="mailto:venkatakarthik6934@gmail.com">Email</a>
+      <button type="button" class="copy-email" data-email="venkatakarthik6934@gmail.com" data-done="Email copied">Copy email</button>
     </nav>
     <p class="intro">I'm a grad student at UIC working on a dual MBA in Finance and MS in Business Analytics, graduating December 2027. What I enjoy most is the point where finance and data meet: using data to get to a clearer financial answer. <strong>I'm seeking internships in FP&amp;A, financial analysis, investments, risk or business analytics.</strong></p>
   </div>
@@ -240,7 +247,7 @@ footer{border-top:1px solid var(--rule);padding:20px 0 28px;color:var(--muted);f
 
 <section class="wrap contact" aria-labelledby="contact">
   <h2 id="contact">Contact</h2>
-  <p>Email: <a href="mailto:venkatakarthik6934@gmail.com">venkatakarthik6934@gmail.com</a></p>
+  <p>Email: <span class="email-text">venkatakarthik6934@gmail.com</span> <button type="button" class="copy-email inline" data-email="venkatakarthik6934@gmail.com" data-done="Copied">Copy</button></p>
   <p>LinkedIn: <a href="https://www.linkedin.com/in/karthik-bommisetty">linkedin.com/in/karthik-bommisetty</a></p>
   <p>GitHub: <a href="https://github.com/karthikVenkata-Create">github.com/karthikVenkata-Create</a></p>
 </section>
@@ -250,5 +257,19 @@ footer{border-top:1px solid var(--rule);padding:20px 0 28px;color:var(--muted);f
   <div class="wrap">Karthik Bommisetty, Chicago</div>
 </footer>
 
+<script>
+document.querySelectorAll('.copy-email').forEach(function (b) {
+  var label = b.textContent;
+  b.addEventListener('click', function () {
+    var email = b.dataset.email;
+    var done = function () { b.textContent = b.dataset.done; setTimeout(function () { b.textContent = label; }, 2000); };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(email).then(done, function () { b.textContent = email; });
+    } else {
+      b.textContent = email;
+    }
+  });
+});
+</script>
 </body>
 </html>
