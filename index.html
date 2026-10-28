@@ -50,10 +50,10 @@ h1{margin:0;font-size:clamp(40px,6vw,64px);line-height:1.02;font-weight:600;lett
 .copy-email{font:inherit;cursor:pointer;background:none;border:0;padding:0 0 1px;color:#fff;border-bottom:1px solid rgba(255,255,255,.35);text-align:right}
 .copy-email:hover{border-bottom-color:#fff}
 .copy-email:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:2px}
-.copy-email.inline{color:var(--link);border:1px solid var(--rule);border-radius:4px;padding:1px 10px;margin-left:6px;font-size:15px;background:var(--surface)}
-.copy-email.inline:hover{border-color:var(--link)}
+.copy-email.inline{color:var(--link);border-bottom:1px solid currentColor;text-align:left}
+.copy-email.inline:hover{color:var(--ink)}
 .copy-email.inline:focus-visible{outline-color:var(--link)}
-.email-text{user-select:all}
+
 
 /* sections */
 section{padding:72px 0 8px}
@@ -117,7 +117,7 @@ footer{border-top:1px solid var(--rule);padding:20px 0 28px;color:var(--muted);f
     <nav class="contact-links" aria-label="Contact">
       <a href="https://www.linkedin.com/in/karthik-bommisetty">LinkedIn</a>
       <a href="https://github.com/karthikVenkata-Create">GitHub</a>
-      <button type="button" class="copy-email" data-email="venkatakarthik6934@gmail.com" data-done="Email copied">Copy email</button>
+      <button type="button" class="copy-email" data-email="venkatakarthik6934@gmail.com" data-done="Copied" title="Click to copy">venkatakarthik6934@gmail.com</button>
     </nav>
     <p class="intro">I'm a grad student at UIC working on a dual MBA in Finance and MS in Business Analytics, graduating December 2027. What I enjoy most is the point where finance and data meet: using data to get to a clearer financial answer. <strong>I'm seeking internships in FP&amp;A, financial analysis, investments, risk or business analytics.</strong></p>
   </div>
@@ -247,7 +247,7 @@ footer{border-top:1px solid var(--rule);padding:20px 0 28px;color:var(--muted);f
 
 <section class="wrap contact" aria-labelledby="contact">
   <h2 id="contact">Contact</h2>
-  <p>Email: <span class="email-text">venkatakarthik6934@gmail.com</span> <button type="button" class="copy-email inline" data-email="venkatakarthik6934@gmail.com" data-done="Copied">Copy</button></p>
+  <p>Email: <button type="button" class="copy-email inline" data-email="venkatakarthik6934@gmail.com" data-done="Copied" title="Click to copy">venkatakarthik6934@gmail.com</button></p>
   <p>LinkedIn: <a href="https://www.linkedin.com/in/karthik-bommisetty">linkedin.com/in/karthik-bommisetty</a></p>
   <p>GitHub: <a href="https://github.com/karthikVenkata-Create">github.com/karthikVenkata-Create</a></p>
 </section>
